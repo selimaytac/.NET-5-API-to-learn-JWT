@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CoreAPIWithJWT.IdentityAuth;
 using CoreAPIWithJWT.Models;
+using CoreAPIWithJWT.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -41,7 +41,7 @@ namespace CoreAPIWithJWT.Controllers
             var userExist = await _userManager.FindByNameAsync(model.UserName);
             if (userExist != null)
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response { Status = "Error", Message = "User already exist." });
+                    new Response<IdentityError> {Status = "Error", Message = "User already exist."});
 
             var user = new ApplicationUser
             {
@@ -54,9 +54,12 @@ namespace CoreAPIWithJWT.Controllers
 
             return !result.Succeeded
                 ? StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response
-                    { Status = "Error", Message = "User creation failed! Please check user details and try again.", Errors = result.Errors.ToList() })
-                : Ok(new Response { Status = "Success", Message = "User created successfully!" });
+                    new Response<IdentityError>
+                    {
+                        Status = "Error", Message = "User creation failed! Please check user details and try again.",
+                        Errors = result.Errors.ToList()
+                    })
+                : Ok(new Response<NoDataResponse> {Status = "Success", Message = "User created successfully!"});
         }
 
         [HttpPost]
@@ -67,14 +70,14 @@ namespace CoreAPIWithJWT.Controllers
 
             if (userExist != null)
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response { Status = "Error", Message = "User already exist!" });
+                    new Response<NoDataResponse> {Status = "Error", Message = "User already exist!"});
 
             var recorder = await _userManager.FindByIdAsync(model.recorderId);
             var isAdmin = await _userManager.GetRolesAsync(recorder);
 
             if (!isAdmin.Contains(UserRoles.Admin))
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response { Status = "Error", Message = "You don't have enough permission!" });
+                    new Response<NoDataResponse> {Status = "Error", Message = "You don't have enough permission!"});
 
             var user = new ApplicationUser
             {
@@ -87,8 +90,11 @@ namespace CoreAPIWithJWT.Controllers
 
             if (!result.Succeeded)
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response
-                    { Status = "Error", Message = "User creation failed! Please check user details and try again.", Errors = result.Errors.ToList() });
+                    new Response<IdentityError>
+                    {
+                        Status = "Error", Message = "User creation failed! Please check user details and try again.",
+                        Errors = result.Errors.ToList()
+                    });
 
             if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
                 await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
@@ -99,7 +105,7 @@ namespace CoreAPIWithJWT.Controllers
             if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
                 await _userManager.AddToRoleAsync(user, UserRoles.Admin);
 
-            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+            return Ok(new Response<NoDataResponse> {Status = "Success", Message = "User created successfully!"});
         }
 
         [HttpPost]
@@ -138,29 +144,6 @@ namespace CoreAPIWithJWT.Controllers
             }
 
             return Unauthorized();
-        }
-
-        [Authorize]
-        [HttpGet]
-        [Route("testdata")]
-        public IActionResult TestData()
-        {
-            return Ok(new Response
-            {
-                Message = "Authentication completed successfully.",
-                Status = "Success"
-            });
-        }
-
-        /// <summary>
-        /// Easy way to access id's without going to database.
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("getIds")]
-        public IActionResult easyWaytoReachUserIds()
-        {
-            return Ok(_userManager.Users.Select(x => x.Id));
         }
     }
 }

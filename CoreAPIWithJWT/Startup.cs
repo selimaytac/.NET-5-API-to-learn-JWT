@@ -28,6 +28,8 @@ namespace CoreAPIWithJWT
         {
             services.AddControllers();
 
+            services.AddAutoMapper(typeof(Startup));
+
             // Entity Framework
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

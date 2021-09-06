@@ -15,6 +15,7 @@ Microsoft.AspNetCore.Identity.EntityFrameworkCore  |  5.0.9
 Microsoft.EntityFrameworkCore.SqlServer  |  5.0.9
 Microsoft.EntityFrameworkCore.Tools  |  5.0.9
 Swashbuckle.AspNetCore  |  6.2.1
+AutoMapper.Extensions.Microsoft.DependencyInjection  |  8.1.1
 
 ## Usage
 
