@@ -31,9 +31,9 @@ AutoMapper.Extensions.Microsoft.DependencyInjection  |  8.1.1
     var recorder = await _userManager.FindByIdAsync(model.recorderId);
     var isAdmin = await _userManager.GetRolesAsync(recorder);
 
-        if (!isAdmin.Contains(UserRoles.Admin))
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                new Response {Status = "Error", Message = "You don't have enough permission!"});
+    if (!isAdmin.Contains(UserRoles.Admin))
+        return StatusCode(StatusCodes.Status500InternalServerError,
+            new Response<NoDataResponse> {Status = "Error", Message = "You don't have enough permission!"});
 ```
 #### 4. You can test auth operations using the token that comes after logging in with Swagger ui or postman.
 
