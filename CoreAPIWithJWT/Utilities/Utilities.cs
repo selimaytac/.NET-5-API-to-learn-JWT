@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using CoreAPIWithJWT.Models;
@@ -20,13 +21,24 @@ namespace CoreAPIWithJWT.Utilities
         }
         public static Dictionary<string, string> GetTokenInfo(string token)
         {
-            var TokenInfo = new Dictionary<string, string>();
+            var tokenInfo = new Dictionary<string, string>();
 
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(token);
             var claims = jwtSecurityToken.Claims.ToList();
 
             return claims.ToDictionary(claim => claim.Type, claim => claim.Value);
+        }
+
+        public static List<Claim> GetTokenClaims(string token)
+        {
+            var tokenInfo = new Dictionary<string, string>();
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(token);
+            var claims = jwtSecurityToken.Claims.ToList();
+
+            return claims;
         }
     }
 }

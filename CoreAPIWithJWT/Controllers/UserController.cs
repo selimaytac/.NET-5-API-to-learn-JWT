@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using CoreAPIWithJWT.Utilities;
 using AutoMapper;
 using CoreAPIWithJWT.IdentityAuth;
 using CoreAPIWithJWT.Models.Response;
@@ -46,7 +50,7 @@ namespace CoreAPIWithJWT.Controllers
                     Status = "Success",
                     Data = users
                 })
-                : Ok(new Response<NoDataResponse>
+                : NotFound(new Response<NoDataResponse>
                 {
                     Message = "No user found.",
                     Status = "Error"
@@ -67,7 +71,7 @@ namespace CoreAPIWithJWT.Controllers
                     Status = "Success",
                     Data = _mapper.Map<UserResponseModel>(user)
                 })
-                : Ok(new Response<NoDataResponse>
+                : NotFound(new Response<NoDataResponse>
                 {
                     Message = "No user found.",
                     Status = "Error"
@@ -77,27 +81,57 @@ namespace CoreAPIWithJWT.Controllers
         [Authorize]
         [HttpGet]
         [Route("getUserWithMail")]
-
         public IActionResult GetUserWithMail([FromQuery] string email)
         {
             List<UserResponseModel> users = new();
 
             var user = _userManager.Users.Where(u => u.Email == email).ToList();
 
-                user.ForEach(u =>
+            user.ForEach(u =>
                 users.Add(_mapper.Map<UserResponseModel>(u)));
 
-            return user != null
+            return user.Count > 0
                 ? Ok(new Response<List<UserResponseModel>>
                 {
                     Message = "Authentication completed successfully.",
                     Status = "Success",
                     Data = users
                 })
-                : Ok(new Response<NoDataResponse>
+                : NotFound(new Response<NoDataResponse>
                 {
                     Message = "No user found.",
                     Status = "Error"
+                });
+        }
+
+
+        [Authorize]
+        [HttpGet]
+        [Route("getCurrentUser")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+
+            string authHeader = Request.Headers["Authorization"];
+            authHeader = authHeader.Replace("Bearer ", "");
+
+            var nameclaim = Utilities.Utilities.GetTokenClaims(authHeader)
+                .Where(x => x.Type == ClaimTypes.Name)
+                .Select(x => x.Value).FirstOrDefault();
+
+            var user = _mapper.Map<UserResponseModel>(await _userManager.FindByNameAsync(nameclaim));
+
+
+            return user != null
+                ? Ok(new Response<UserResponseModel>
+                {
+                    Status = "Success",
+                    Data = user,
+                    Message = $"User Claims count: {User.Claims.Count()}"
+                })
+                : NotFound(new Response<NoDataResponse>
+                {
+                    Status = "Error",
+                    Message = "No user found."
                 });
         }
     }

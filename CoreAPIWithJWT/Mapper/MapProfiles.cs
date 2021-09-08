@@ -12,7 +12,7 @@ namespace CoreAPIWithJWT.Mapper
     {
         public MapProfiles()
         {
-            CreateMap<ApplicationUser, UserResponseModel>();
+            CreateMap<ApplicationUser, UserResponseModel>().ReverseMap();
         }
     }
 }
